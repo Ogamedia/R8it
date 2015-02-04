@@ -1,22 +1,30 @@
 class PostsController < ApplicationController
 	before_action :set_post, only: [:show, :edit, :update, :delete, :destroy]
+  before_action :authenticate_user!, except: [:index, :show]
   
     def index
     @posts = Post.all
   end
 
   def show
+    @reviews = Review.where(post_id: @post.id).order("created_at DESC")
+
+    if @reviews.blank?
+      @avg_review = 0
+    else
+      @avg_review = @reviews.average(:rating).round(2)
+    end
   end
 
   def new
-    @post = Post.new
+    @post = current_user.posts.build
   end
 
   def edit
   end
 
   def create
-    @post = Post.new(post_params)
+    @post = current_user.posts.build(post_params)
       if @post.save
         redirect_to(:action => 'index')
 # , notice: 'post was successfully created.'
